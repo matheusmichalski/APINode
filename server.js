@@ -1,11 +1,21 @@
 import express, { request, response } from "express";
-import { PrismaClient } from '@prisma/client'
 import e from "express";
+import { PrismaClient } from '@prisma/client';
+import path from "path";
+import { fileURLToPath } from 'url';
 
-const prisma = new PrismaClient()
+
+
+const prisma = new PrismaClient();
 const app = express();
-app.use(express.json())
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+app.use(express.json());
 
+app.use(express.static(path.join(__dirname, 'public')));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
 
 app.post('/usuarios', async (request, response) => {
 
@@ -21,8 +31,8 @@ app.post('/usuarios', async (request, response) => {
 });
 
 app.get('/usuarios', async (request, response) => {
-    
-    let users1 =  [];
+
+    let users1 = [];
 
     if (request.query) {
         users1 = await prisma.user.findMany({
@@ -32,8 +42,6 @@ app.get('/usuarios', async (request, response) => {
                 email: request.query.email,
             }
         })
-    } else {
-
     }
 
     console.log(request)
@@ -69,8 +77,9 @@ app.delete(('/usuarios/:id'), async (request, response) => {
     response.status(200).json({ message: "Usuário deletado com sucesso!" })
 });
 
-app.listen(3000)
-
+app.listen(3000, () => {
+    console.log('Servidor rodando!')
+});
 
 /*
     1- Tipos de Rota / Método HTTP
