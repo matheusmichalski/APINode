@@ -1,9 +1,9 @@
 import express, { request, response } from "express";
-import e from "express";
 import { PrismaClient } from '@prisma/client';
 import path from "path";
 import { fileURLToPath } from 'url';
-
+import dotenv from 'dotenv';
+dotenv.config();
 
 
 const prisma = new PrismaClient();
@@ -17,37 +17,49 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
+function getVersion(){
+    prisma.$connect
+}
+
 app.post('/usuarios', async (request, response) => {
-
-    await prisma.user.create({
-        data: {
-            name: request.body.name,
-            age: request.body.age,
-            email: request.body.email
-        }
-    });
-
-    response.status(201).json(request.body)
+    try{
+        await prisma.$connect();
+        await prisma.user.create({
+            data: {
+                name: request.body.name,
+                age: request.body.age,
+                email: request.body.email
+            }
+        });
+        response.status(201).send(request.body)
+    }
+    catch(error){
+        response.status(500).json({error: error})
+    }
 });
 
 app.get('/usuarios', async (request, response) => {
-    
-    let users1 =  [];
+    try {
+        await prisma.$connect();
+        let users;
 
-    if (request.query) {
-        users1 = await prisma.user.findMany({
-            where: {
-                name: request.query.name,
-                age: request.query.age,
-                email: request.query.email,
-            }
-        })
-    } else {
-        const users = await prisma.user.findMany()
+        if (request.query) {
+            users = await prisma.user.findMany({
+                where: {
+                    name: request.query.name,
+                    age: request.query.age,
+                    email: request.query.email,
+                }
+            });
+        } else {
+            users = await prisma.user.findMany();
+        }
+        response.status(200).json({ users: users });
+    } catch (error) {
+        response.status(400).json({ error: error.message });
     }
-
-    response.status(200).json(users)
 });
+
 
 app.put('/usuarios/:id', async (request, response) => {
 
@@ -77,6 +89,7 @@ app.delete(('/usuarios/:id'), async (request, response) => {
 });
 
 app.listen(3000, () => {
+    getVersion()
     console.log('Servidor rodando!')
 });
 
