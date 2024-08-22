@@ -31,8 +31,8 @@ app.post('/usuarios', async (request, response) => {
 });
 
 app.get('/usuarios', async (request, response) => {
-
-    let users1 = [];
+    
+    let users1 =  [];
 
     if (request.query) {
         users1 = await prisma.user.findMany({
@@ -42,11 +42,10 @@ app.get('/usuarios', async (request, response) => {
                 email: request.query.email,
             }
         })
+    } else {
+        const users = await prisma.user.findMany()
     }
 
-    console.log(request)
-
-    const users = await prisma.user.findMany()
     response.status(200).json(users)
 });
 
